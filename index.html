@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSI Model Interactive Presentation</title>
+    <style>
+        :root {
+            --background-color: #f5f5f5;
+            --text-color: #333;
+            --card-bg: #fff;
+            --header-bg: #3498db;
+            --header-text: #fff;
+            --border-color: #ddd;
+            --highlight-color: #2980b9;
+            --accent-color: #e74c3c;
+            --modal-bg: rgba(0, 0, 0, 0.8);
+            --modal-content-bg: #fff;
+            --modal-text: #333;
+            --toggle-bg: #3498db;
+            --toggle-thumb: #fff;
+        }
+
+        .dark-theme {
+            --background-color: #1e1e1e;
+            --text-color: #f5f5f5;
+            --card-bg: #2d2d2d;
+            --header-bg: #1a5276;
+            --header-text: #ecf0f1;
+            --border-color: #444;
+            --highlight-color: #3498db;
+            --accent-color: #e74c3c;
+            --modal-bg: rgba(0, 0, 0, 0.9);
+            --modal-content-bg: #2d2d2d;
+            --modal-text: #f5f5f5;
+            --toggle-bg: #2c3e50;
+            --toggle-thumb: #3498db;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: var(--highlight-color);
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .theme-toggle-label {
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+            background-color: var(--toggle-bg);
+            border-radius: 30px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .theme-toggle-label::after {
+            content: '';
+            position: absolute;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background-color: var(--toggle-thumb);
+            top: 2px;
+            left: 2px;
+            transition: all 0.3s;
+        }
+
+        #theme-toggle:checked + .theme-toggle-label::after {
+            transform: translateX(30px);
+        }
+
+        #theme-toggle {
+            display: none;
+        }
+
+        .theme-toggle-text {
+            font-size: 0.9rem;
+            margin-right: 10px;
+        }
+
+        .osi-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .osi-layer {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transform: translateY(0);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .osi-layer:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .layer-header {
+            padding: 15px;
+            background-color: var(--header-bg);
+            color: var(--header-text);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .layer-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .layer-number {
+            font-size: 1.5rem;
+            background-color: rgba(255, 255, 255, 0.2);
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .layer-preview {
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .layer-preview p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: var(--text-color);
+        }
+
+        .click-hint {
+            font-size: 0.8rem;
+            color: var(--highlight-color);
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--modal-bg);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.show {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background-color: var(--modal-content-bg);
+            color: var(--modal-text);
+            width: 90%;
+            max-width: 700px;
+            border-radius: 10px;
+            overflow: hidden;
+            transform: scale(0.7);
+            transition: transform 0.3s ease;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal.show .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            padding: 20px;
+            background-color: var(--header-bg);
+            color: var(--header-text);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--header-text);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .protocols-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .protocol-tag {
+            background-color: var(--highlight-color);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+
+        section {
+            margin-bottom: 20px;
+        }
+
+        h3 {
+            margin-bottom: 10px;
+            color: var(--highlight-color);
+        }
+
+        .functions-list {
+            list-style-position: inside;
+            padding-left: 20px;
+        }
+
+        .functions-list li {
+            margin-bottom: 5px;
+        }
+
+        .intro {
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto 30px;
+        }
+
+        .layer-7 .layer-header {
+            background-color: #9b59b6;
+        }
+        .layer-6 .layer-header {
+            background-color: #3498db;
+        }
+        .layer-5 .layer-header {
+            background-color: #2ecc71;
+        }
+        .layer-4 .layer-header {
+            background-color: #f1c40f;
+        }
+        .layer-3 .layer-header {
+            background-color: #e67e22;
+        }
+        .layer-2 .layer-header {
+            background-color: #e74c3c;
+        }
+        .layer-1 .layer-header {
+            background-color: #34495e;
+        }
+
+        @media (max-width: 768px) {
+            .layer-header {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .modal-content {
+                width: 95%;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="theme-toggle">
+            <span class="theme-toggle-text">Toggle Theme</span>
+            <input type="checkbox" id="theme-toggle">
+            <label for="theme-toggle" class="theme-toggle-label"></label>
+        </div>
+        
+        <header>
+            <h1>OSI Model Interactive Presentation</h1>
+            <p class="intro">The OSI (Open Systems Interconnection) model is a conceptual framework used to understand network interactions. Click on each layer to explore its functions, protocols, and headers.</p>
+        </header>
+        
+        <div class="osi-container">
+            <!-- Layer 7: Application -->
+            <div class="osi-layer layer-7" data-layer="7">
+                <div class="layer-header">
+                    <span class="layer-name">Application Layer</span>
+                    <span class="layer-number">7</span>
+                </div>
+                <div class="layer-preview">
+                    <p>Provides network services directly to end-users</p>
+                    <span class="click-hint">Click to learn more</span>
+                </div>
+            </div>
+            
+            <!-- Layer 6: Presentation -->
+            <div class="osi-layer layer-6" data-layer="6">
+                <div class="layer-header">
+                    <span class="layer-name">Presentation Layer</span>
+                    <span class="layer-number">6</span>
+                </div>
+                <div class="layer-preview">
+                    <p>Translates data between application and network formats</p>
+                    <span class="click-hint">Click to learn more</span>
+                </div>
+            </div>
+            
+            <!-- Layer 5: Session -->
+            <div class="osi-layer layer-5" data-layer="5">
+                <div class="layer-header">
+                    <span class="layer-name">Session Layer</span>
+                    <span class="layer-number">5</span>
+                </div>
+                <div class="layer-preview">
+                    <p>Manages communication sessions between applications</p>
+                    <span class="click-hint">Click to learn more</span>
+                </div>
+            </div>
+            
+            <!-- Layer 4: Transport -->
+            <div class="osi-layer layer-4" data-layer="4">
+                <div class="layer-header">
+                    <span class="layer-name">Transport Layer</span>
+                    <span class="layer-number">4</span>
+                </div>
+                <div class="layer-preview">
+                    <p>Provides end-to-end communication control</p>
+                    <span class="click-hint">Click to learn more</span>
+                </div>
+            </div>
+            
+            <!-- Layer 3: Network -->
+            <div class="osi-layer layer-3" data-layer="3">
+                <div class="layer-header">
+                    <span class="layer-name">Network Layer</span>
+                    <span class="layer-number">3</span>
+                </div>
+                <div class="layer-preview">
+                    <p>Handles routing and forwarding of data</p>
+                    <span class="click-hint">Click to learn more</span>
+                </div>
+            </div>
+            
+            <!-- Layer 2: Data Link -->
+            <div class="osi-layer layer-2" data-layer="2">
+                <div class="layer-header">
+                    <span class="layer-name">Data Link Layer</span>
+                    <span class="layer-number">2</span>
+                </div>
+                <div class="layer-preview">
+                    <p>Provides node-to-node data transfer</p>
+                    <span class="click-hint">Click to learn more</span>
+                </div>
+            </div>
+            
+            <!-- Layer 1: Physical -->
+            <div class="osi-layer layer-1" data-layer="1">
+                <div class="layer-header">
+                    <span class="layer-name">Physical Layer</span>
+                    <span class="layer-number">1</span>
+                </div>
+                <div class="layer-preview">
+                    <p>Transmits raw bit stream over physical medium</p>
+                    <span class="click-hint">Click to learn more</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal -->
+    <div class="modal" id="layer-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">Layer Details</span>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Modal content will be injected here -->
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('theme-toggle');
+        themeToggle.addEventListener('change', function() {
+            document.body.classList.toggle('dark-theme');
+        });
+        
+        // Modal functionality
+        const modal = document.getElementById('layer-modal');
+        const modalTitle = modal.querySelector('.modal-title');
+        const modalBody = modal.querySelector('.modal-body');
+        const closeButton = modal.querySelector('.modal-close');
+        
+        // Layer data
+        const layerData = {
+            7: {
+                name: "Application Layer (Layer 7)",
+                description: "The Application Layer is the OSI layer closest to the end user. It provides network services directly to the user's applications. This layer is responsible for identifying and establishing the availability of the intended communication partner and determining whether sufficient resources exist for the intended communication.",
+                functions: [
+                    "Identifies communication partners",
+                    "Determines resource availability",
+                    "Synchronizes communication",
+                    "Provides application services for file transfers, email, and other network software services"
+                ],
+                protocols: ["HTTP", "HTTPS", "FTP", "SMTP", "POP3", "IMAP", "DNS", "DHCP", "Telnet", "SSH"],
+                header: "Application layer protocols typically use headers that include information such as protocol type, version, and specific command or status codes. For example, an HTTP header includes method (GET, POST), URL, HTTP version, and various optional fields like cookies and authentication information."
+            },
+            6: {
+                name: "Presentation Layer (Layer 6)",
+                description: "The Presentation Layer is responsible for the delivery and formatting of information to the Application Layer for further processing or display. It relieves the Application Layer of concern regarding syntactical differences in data representation within the end-user systems.",
+                functions: [
+                    "Data translation",
+                    "Data encryption/decryption",
+                    "Data compression",
+                    "Character set conversion"
+                ],
+                protocols: ["SSL/TLS", "JPEG", "MPEG", "GIF", "PNG", "ASCII", "EBCDIC", "XML"],
+                header: "The Presentation Layer doesn't have standardized headers like lower layers. Instead, it handles data formats like ASCII, EBCDIC, encryption parameters, and compression specifications. When protocols like SSL/TLS operate at this layer, they include headers with encryption algorithm identifiers, session keys, and certificate information."
+            },
+            5: {
+                name: "Session Layer (Layer 5)",
+                description: "The Session Layer establishes, manages, and terminates connections between applications. It sets up, coordinates, and terminates conversations, exchanges, and dialogues between the applications at each end of the communication.",
+                functions: [
+                    "Session establishment, maintenance, and termination",
+                    "Session synchronization",
+                    "Dialogue control (simplex, half-duplex, full-duplex)",
+                    "Checkpoint and recovery services"
+                ],
+                protocols: ["NetBIOS", "RPC", "PPTP", "L2TP", "AppleTalk", "NFS"],
+                header: "Session Layer protocols include headers with session identifiers, synchronization points, and control flags. Examples include dialog control flags (who can transmit), sequence numbers for synchronization, and session establishment parameters. RPC (Remote Procedure Call) headers contain program numbers, procedure numbers, and version numbers."
+            },
+            4: {
+                name: "Transport Layer (Layer 4)",
+                description: "The Transport Layer provides transparent transfer of data between end users, ensuring complete data transfer. It controls the reliability of a given link through flow control, segmentation/desegmentation, and error control.",
+                functions: [
+                    "End-to-end connection",
+                    "Reliability and flow control",
+                    "Multiplexing",
+                    "Segmentation and reassembly",
+                    "Connection-oriented/connectionless communication"
+                ],
+                protocols: ["TCP", "UDP", "SCTP", "DCCP"],
+                header: "TCP Header: Source and destination ports (16 bits each), sequence number (32 bits), acknowledgment number (32 bits), data offset (4 bits), reserved (3 bits), control flags (9 bits), window size (16 bits), checksum (16 bits), urgent pointer (16 bits), and options (variable).\n\nUDP Header: Source and destination ports (16 bits each), length (16 bits), and checksum (16 bits)."
+            },
+            3: {
+                name: "Network Layer (Layer 3)",
+                description: "The Network Layer provides the functional and procedural means of transferring variable length data sequences from a source to a destination via one or more networks while maintaining the quality of service requested by the Transport Layer.",
+                functions: [
+                    "Logical addressing",
+                    "Routing",
+                    "Path determination",
+                    "Traffic control",
+                    "Fragmentation and reassembly"
+                ],
+                protocols: ["IP (IPv4, IPv6)", "ICMP", "IGMP", "OSPF", "BGP", "RIP", "EIGRP"],
+                header: "IPv4 Header: Version (4 bits), IHL (4 bits), Type of Service (8 bits), Total Length (16 bits), Identification (16 bits), Flags (3 bits), Fragment Offset (13 bits), Time to Live (8 bits), Protocol (8 bits), Header Checksum (16 bits), Source Address (32 bits), Destination Address (32 bits), and Options (variable).\n\nIPv6 Header: Version (4 bits), Traffic Class (8 bits), Flow Label (20 bits), Payload Length (16 bits), Next Header (8 bits), Hop Limit (8 bits), Source Address (128 bits), and Destination Address (128 bits)."
+            },
+            2: {
+                name: "Data Link Layer (Layer 2)",
+                description: "The Data Link Layer provides node-to-node data transfer—a link between two directly connected nodes. It detects and possibly corrects errors that may occur in the Physical Layer. It defines the protocol to establish and terminate a connection between two physically connected devices.",
+                functions: [
+                    "Framing",
+                    "Physical addressing (MAC)",
+                    "Flow control",
+                    "Error detection and handling",
+                    "Media access control"
+                ],
+                protocols: ["Ethernet", "PPP", "HDLC", "Frame Relay", "ATM", "ARP", "RARP", "L2TP", "PPTP"],
+                header: "Ethernet Frame: Preamble (8 bytes), Destination MAC Address (6 bytes), Source MAC Address (6 bytes), EtherType or Length (2 bytes), Data (46-1500 bytes), and Frame Check Sequence (4 bytes).\n\nPPP Frame: Flag (1 byte), Address (1 byte), Control (1 byte), Protocol (2 bytes), Data (variable), and Frame Check Sequence (2 or 4 bytes)."
+            },
+            1: {
+                name: "Physical Layer (Layer 1)",
+                description: "The Physical Layer defines the electrical, mechanical, procedural, and functional specifications for activating, maintaining, and deactivating the physical link between end systems. It deals with the physical connection between devices.",
+                functions: [
+                    "Bit transmission",
+                    "Physical medium specification",
+                    "Data encoding",
+                    "Signal transmission and reception",
+                    "Physical topology definition"
+                ],
+                protocols: ["Ethernet Physical Layer", "DSL", "ISDN", "USB", "Bluetooth", "IEEE 802.11 (Wi-Fi Physical Layer)", "RS-232", "RS-485"],
+                header: "The Physical Layer doesn't have headers in the traditional sense. Instead, it deals with physical characteristics like:\n\n- Electrical signals (voltage levels, signal timing)\n- Mechanical specifications (cable types, connectors)\n- Procedural elements (initialization sequences, handshaking)\n- Functional specifications (bit synchronization, line coding)\n\nFor example, Ethernet Physical Layer defines characteristics like Manchester encoding, 10BASE-T, 100BASE-TX specifications, and RJ45 connector pinouts."
+            }
+        };
+        
+        // Open modal when clicking on a layer
+        const layers = document.querySelectorAll('.osi-layer');
+        layers.forEach(layer => {
+            layer.addEventListener('click', function() {
+                const layerNumber = this.getAttribute('data-layer');
+                const data = layerData[layerNumber];
+                
+                modalTitle.textContent = data.name;
+                
+                modalBody.innerHTML = `
+                    <section>
+                        <h3>Description</h3>
+                        <p>${data.description}</p>
+                    </section>
+                    
+                    <section>
+                        <h3>Key Functions</h3>
+                        <ul class="functions-list">
+                            ${data.functions.map(func => `<li>${func}</li>`).join('')}
+                        </ul>
+                    </section>
+                    
+                    <section>
+                        <h3>Header Structure</h3>
+                        <p>${data.header}</p>
+                    </section>
+                    
+                    <section>
+                        <h3>Protocols</h3>
+                        <div class="protocols-list">
+                            ${data.protocols.map(protocol => `<span class="protocol-tag">${protocol}</span>`).join('')}
+                        </div>
+                    </section>
+                `;
+                
+                modal.classList.add('show');
+            });
+        });
+        
+        // Close modal when clicking close button or outside the modal
+        closeButton.addEventListener('click', function() {
+            modal.classList.remove('show');
+        });
+        
+        window.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                modal.classList.remove('show');
+            }
+        });
+    </script>
+</body>
+</html>
